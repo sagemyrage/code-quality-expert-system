@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: cqes-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_BIND_HOST}:${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:8.6
+    container_name: cqes-redis
+    ports:
+      - "${REDIS_BIND_HOST}:${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
