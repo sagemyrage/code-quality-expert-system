@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 	redis "github.com/redis/go-redis/v9"
 
 	"github.com/sagemyrage/code-quality-expert-system/internal/config"
+	apphttp "github.com/sagemyrage/code-quality-expert-system/internal/http"
 )
 
 func newPostgresPool(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
@@ -46,19 +46,6 @@ func newRedisClient(ctx context.Context, cfg *config.Config) (*redis.Client, err
 	return client, nil
 }
 
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	response := map[string]string{
-		"status":  "ok",
-		"service": "code-quality-expert-system",
-	}
-
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-	}
-}
-
 func main() {
 	ctx := context.Background()
 
@@ -83,11 +70,10 @@ func main() {
 		}
 	}()
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/health", healthHandler)
+	router := apphttp.NewRouter()
 	server := &http.Server{
 		Addr:    ":" + cfg.App.Port,
-		Handler: mux,
+		Handler: router,
 	}
 	log.Printf("starting server on port %s", cfg.App.Port)
 	if err := server.ListenAndServe(); err != nil {
