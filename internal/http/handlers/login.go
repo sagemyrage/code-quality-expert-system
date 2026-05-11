@@ -6,6 +6,11 @@ import (
 )
 
 func LoginPage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	tmpl, err := template.ParseFiles(
 		"web/templates/base.html",
 		"web/templates/login.html",
