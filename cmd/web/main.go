@@ -11,6 +11,8 @@ import (
 
 	"github.com/sagemyrage/code-quality-expert-system/internal/config"
 	apphttp "github.com/sagemyrage/code-quality-expert-system/internal/http"
+	"github.com/sagemyrage/code-quality-expert-system/internal/repository/postgres"
+	"github.com/sagemyrage/code-quality-expert-system/internal/service"
 )
 
 func newPostgresPool(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
@@ -70,7 +72,10 @@ func main() {
 		}
 	}()
 
-	router := apphttp.NewRouter()
+	userRepo := postgres.NewUserRepository(pgPool)
+	authService := service.NewAuthService(userRepo)
+
+	router := apphttp.NewRouter(authService)
 	server := &http.Server{
 		Addr:    ":" + cfg.App.Port,
 		Handler: router,

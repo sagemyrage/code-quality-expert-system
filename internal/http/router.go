@@ -4,14 +4,17 @@ import (
 	"net/http"
 
 	"github.com/sagemyrage/code-quality-expert-system/internal/http/handlers"
+	"github.com/sagemyrage/code-quality-expert-system/internal/service"
 )
 
-func NewRouter() http.Handler {
+func NewRouter(authService *service.AuthService) http.Handler {
+	h := handlers.NewHandler(authService)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handlers.Home)
-	mux.HandleFunc("/login", handlers.LoginPage)
-	mux.HandleFunc("/register", handlers.RegisterPage)
-	mux.HandleFunc("/health", handlers.Health)
+	mux.HandleFunc("GET /", handlers.Home)
+	mux.HandleFunc("GET /login", handlers.LoginPage)
+	mux.HandleFunc("GET /register", h.RegisterPage)
+	mux.HandleFunc("POST /register", h.Register)
+	mux.HandleFunc("GET /health", handlers.Health)
 
 	return mux
 }
