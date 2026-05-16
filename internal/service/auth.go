@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/sagemyrage/code-quality-expert-system/internal/domain"
+	"github.com/sagemyrage/code-quality-expert-system/internal/repository"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -50,6 +52,9 @@ func (s *AuthService) Register(
 
 	user, err := s.userRepo.Create(ctx, email, passwordHash)
 	if err != nil {
+		if errors.Is(err, repository.ErrDuplicateEmail) {
+			return nil, &ValidationError{Message: "email already exists"}
+		}
 		return nil, err
 	}
 

@@ -2,9 +2,12 @@ package postgres
 
 import (
 	"context"
+	"errors"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sagemyrage/code-quality-expert-system/internal/domain"
+	"github.com/sagemyrage/code-quality-expert-system/internal/repository"
 )
 
 type UserRepository struct {
@@ -33,6 +36,12 @@ func (r *UserRepository) Create(ctx context.Context, email string, passwordHash 
 		&user.UpdatedAt,
 	)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" && pgErr.ConstraintName == "users_email_key" {
+				return nil, repository.ErrDuplicateEmail
+			}
+		}
 		return nil, err
 	}
 
