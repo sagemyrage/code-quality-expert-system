@@ -12,6 +12,7 @@ import (
 
 type UserRepository interface {
 	Create(context.Context, string, string) (*domain.User, error)
+	FindByEmail(context.Context, string) (*domain.User, error)
 }
 
 type AuthService struct {
@@ -56,6 +57,33 @@ func (s *AuthService) Register(
 			return nil, &ValidationError{Message: "email already exists"}
 		}
 		return nil, err
+	}
+
+	return user, nil
+}
+
+func (s *AuthService) Login(ctx context.Context, email string, password string) (*domain.User, error) {
+	email = strings.TrimSpace(email)
+	email = strings.ToLower(email)
+	if email == "" {
+		return nil, &ValidationError{Message: "email is required"}
+	}
+
+	if password == "" {
+		return nil, &ValidationError{Message: "password is required"}
+	}
+
+	user, err := s.userRepo.FindByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, repository.ErrUserNotFound) {
+			return nil, &ValidationError{Message: "invalid email or password"}
+		}
+		return nil, err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	if err != nil {
+		return nil, &ValidationError{Message: "invalid email or password"}
 	}
 
 	return user, nil
