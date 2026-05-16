@@ -8,7 +8,7 @@ import (
 	"github.com/sagemyrage/code-quality-expert-system/internal/service"
 )
 
-func (h *Handler) RegisterPage(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -30,7 +30,7 @@ func (h *Handler) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return

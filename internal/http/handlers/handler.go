@@ -1,11 +1,21 @@
 package handlers
 
-import "github.com/sagemyrage/code-quality-expert-system/internal/service"
+import (
+	"time"
 
-type Handler struct {
-	authService *service.AuthService
+	"github.com/sagemyrage/code-quality-expert-system/internal/service"
+)
+
+type AuthHandler struct {
+	authService         *service.AuthService
+	sessionTTL          time.Duration
+	sessionCookieSecure bool
 }
 
-func NewHandler(authService *service.AuthService) *Handler {
-	return &Handler{authService: authService}
+func NewAuthHandler(authService *service.AuthService, sessionTTL time.Duration, sessionCookieSecure bool) *AuthHandler {
+	return &AuthHandler{
+		authService:         authService,
+		sessionTTL:          sessionTTL,
+		sessionCookieSecure: sessionCookieSecure,
+	}
 }

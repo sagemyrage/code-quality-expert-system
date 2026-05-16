@@ -7,11 +7,12 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	redis "github.com/redis/go-redis/v9"
+	goredis "github.com/redis/go-redis/v9"
 
 	"github.com/sagemyrage/code-quality-expert-system/internal/config"
 	apphttp "github.com/sagemyrage/code-quality-expert-system/internal/http"
 	"github.com/sagemyrage/code-quality-expert-system/internal/repository/postgres"
+	"github.com/sagemyrage/code-quality-expert-system/internal/repository/redis"
 	"github.com/sagemyrage/code-quality-expert-system/internal/service"
 )
 
@@ -30,9 +31,9 @@ func newPostgresPool(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, er
 	return pool, nil
 }
 
-func newRedisClient(ctx context.Context, cfg *config.Config) (*redis.Client, error) {
+func newRedisClient(ctx context.Context, cfg *config.Config) (*goredis.Client, error) {
 	addr := fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port)
-	client := redis.NewClient(&redis.Options{
+	client := goredis.NewClient(&goredis.Options{
 		Addr:     addr,
 		Password: cfg.Redis.Password,
 		DB:       cfg.Redis.DB,
@@ -73,9 +74,10 @@ func main() {
 	}()
 
 	userRepo := postgres.NewUserRepository(pgPool)
-	authService := service.NewAuthService(userRepo)
+	sessionRepo := redis.NewSessionRepository(redisClient, cfg.Session.TTL)
+	authService := service.NewAuthService(userRepo, sessionRepo)
 
-	router := apphttp.NewRouter(authService)
+	router := apphttp.NewRouter(authService, cfg.Session.TTL, cfg.Session.CookieSecure)
 	server := &http.Server{
 		Addr:    ":" + cfg.App.Port,
 		Handler: router,

@@ -15,12 +15,28 @@ type UserRepository interface {
 	FindByEmail(context.Context, string) (*domain.User, error)
 }
 
-type AuthService struct {
-	userRepo UserRepository
+type SessionRepository interface {
+	Create(context.Context, int64) (string, error)
+	GetUserID(context.Context, string) (int64, error)
+	Delete(context.Context, string) error
 }
 
-func NewAuthService(userRepo UserRepository) *AuthService {
-	return &AuthService{userRepo: userRepo}
+type AuthService struct {
+	userRepo    UserRepository
+	sessionRepo SessionRepository
+}
+
+func NewAuthService(userRepo UserRepository, sessionRepo SessionRepository) *AuthService {
+	return &AuthService{
+		userRepo:    userRepo,
+		sessionRepo: sessionRepo,
+	}
+}
+
+type LoginResult struct {
+	UserID    int64
+	Email     string
+	SessionID string
 }
 
 func (s *AuthService) Register(
@@ -62,7 +78,7 @@ func (s *AuthService) Register(
 	return user, nil
 }
 
-func (s *AuthService) Login(ctx context.Context, email string, password string) (*domain.User, error) {
+func (s *AuthService) Login(ctx context.Context, email string, password string) (*LoginResult, error) {
 	email = strings.TrimSpace(email)
 	email = strings.ToLower(email)
 	if email == "" {
@@ -86,5 +102,22 @@ func (s *AuthService) Login(ctx context.Context, email string, password string) 
 		return nil, &ValidationError{Message: "invalid email or password"}
 	}
 
-	return user, nil
+	sessionID, err := s.sessionRepo.Create(ctx, user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &LoginResult{
+		UserID:    user.ID,
+		Email:     user.Email,
+		SessionID: sessionID,
+	}, nil
+}
+
+func (s *AuthService) Logout(ctx context.Context, sessionID string) error {
+	if sessionID == "" {
+		return nil
+	}
+
+	return s.sessionRepo.Delete(ctx, sessionID)
 }

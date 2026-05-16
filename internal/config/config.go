@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -41,7 +42,9 @@ type RedisConfig struct {
 }
 
 type SessionConfig struct {
-	Secret string
+	Secret       string
+	TTL          time.Duration
+	CookieSecure bool
 }
 
 type Config struct {
@@ -116,6 +119,16 @@ func Load() (*Config, error) {
 	cfg.Session.Secret, err = mustGetEnv("SESSION_SECRET")
 	if err != nil {
 		return nil, err
+	}
+	ttl := getEnv("SESSION_TTL", "24h")
+	cfg.Session.TTL, err = time.ParseDuration(ttl)
+	if err != nil {
+		return nil, fmt.Errorf("SESSION_TTL must be a duration like 24h: %w", err)
+	}
+	cookieSecure := getEnv("SESSION_COOKIE_SECURE", "false")
+	cfg.Session.CookieSecure, err = strconv.ParseBool(cookieSecure)
+	if err != nil {
+		return nil, fmt.Errorf("SESSION_COOKIE_SECURE must be a bool: %w", err)
 	}
 
 	return cfg, nil
