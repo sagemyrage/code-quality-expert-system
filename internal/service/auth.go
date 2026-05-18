@@ -121,3 +121,19 @@ func (s *AuthService) Logout(ctx context.Context, sessionID string) error {
 
 	return s.sessionRepo.Delete(ctx, sessionID)
 }
+
+func (s *AuthService) AuthenticateSession(ctx context.Context, sessionID string) (int64, error) {
+	if sessionID == "" {
+		return 0, ErrUnauthenticated
+	}
+
+	userID, err := s.sessionRepo.GetUserID(ctx, sessionID)
+	if err != nil {
+		if errors.Is(err, repository.ErrSessionNotFound) {
+			return 0, ErrUnauthenticated
+		}
+		return 0, err
+	}
+
+	return userID, nil
+}

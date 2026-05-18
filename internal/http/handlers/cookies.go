@@ -3,13 +3,13 @@ package handlers
 import (
 	"net/http"
 	"time"
-)
 
-const sessionCookieName = "session_id"
+	"github.com/sagemyrage/code-quality-expert-system/internal/http/session"
+)
 
 func setSessionCookie(w http.ResponseWriter, sessionID string, sessionTTL time.Duration, secure bool) {
 	cookie := &http.Cookie{
-		Name:     sessionCookieName,
+		Name:     session.CookieName,
 		Value:    sessionID,
 		Path:     "/",
 		HttpOnly: true,
@@ -22,7 +22,7 @@ func setSessionCookie(w http.ResponseWriter, sessionID string, sessionTTL time.D
 
 func clearSessionCookie(w http.ResponseWriter, secure bool) {
 	cookie := &http.Cookie{
-		Name:     sessionCookieName,
+		Name:     session.CookieName,
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,

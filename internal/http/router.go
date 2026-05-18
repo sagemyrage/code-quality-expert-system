@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/sagemyrage/code-quality-expert-system/internal/http/handlers"
+	"github.com/sagemyrage/code-quality-expert-system/internal/http/middleware"
 	"github.com/sagemyrage/code-quality-expert-system/internal/service"
 )
 
@@ -19,5 +20,9 @@ func NewRouter(authService *service.AuthService, sessionTTL time.Duration, sessi
 	mux.HandleFunc("GET /register", ah.RegisterPage)
 	mux.HandleFunc("POST /register", ah.Register)
 
-	return mux
+	requireAuth := middleware.RequireAuth(http.HandlerFunc(handlers.Dashboard))
+	mux.Handle("GET /dashboard", requireAuth)
+
+	identifyUser := middleware.IdentifyUser(authService)
+	return identifyUser(mux)
 }

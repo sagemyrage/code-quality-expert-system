@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/sagemyrage/code-quality-expert-system/internal/http/session"
 	"github.com/sagemyrage/code-quality-expert-system/internal/service"
 )
 
@@ -61,7 +62,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := r.Cookie(sessionCookieName)
+	cookie, err := r.Cookie(session.CookieName)
 	if err != nil {
 		if errors.Is(err, http.ErrNoCookie) {
 			clearSessionCookie(w, h.sessionCookieSecure)
