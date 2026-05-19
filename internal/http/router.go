@@ -9,8 +9,15 @@ import (
 	"github.com/sagemyrage/code-quality-expert-system/internal/service"
 )
 
-func NewRouter(authService *service.AuthService, sessionTTL time.Duration, sessionCookieSecure bool) http.Handler {
+func NewRouter(
+	authService *service.AuthService,
+	checkService *service.CheckService,
+	sessionTTL time.Duration,
+	sessionCookieSecure bool,
+) http.Handler {
 	ah := handlers.NewAuthHandler(authService, sessionTTL, sessionCookieSecure)
+	ch := handlers.NewCheckHandler(checkService)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", handlers.Home)
 	mux.HandleFunc("GET /health", handlers.Health)
@@ -22,6 +29,9 @@ func NewRouter(authService *service.AuthService, sessionTTL time.Duration, sessi
 
 	requireAuth := middleware.RequireAuth(http.HandlerFunc(handlers.Dashboard))
 	mux.Handle("GET /dashboard", requireAuth)
+
+	createCheck := middleware.RequireAuth(http.HandlerFunc(ch.Create))
+	mux.Handle("POST /checks", createCheck)
 
 	identifyUser := middleware.IdentifyUser(authService)
 	return identifyUser(mux)

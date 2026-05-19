@@ -77,7 +77,10 @@ func main() {
 	sessionRepo := redis.NewSessionRepository(redisClient, cfg.Session.TTL)
 	authService := service.NewAuthService(userRepo, sessionRepo)
 
-	router := apphttp.NewRouter(authService, cfg.Session.TTL, cfg.Session.CookieSecure)
+	checkRepo := postgres.NewCheckRepository(pgPool)
+	checkService := service.NewCheckService(checkRepo)
+
+	router := apphttp.NewRouter(authService, checkService, cfg.Session.TTL, cfg.Session.CookieSecure)
 	server := &http.Server{
 		Addr:    ":" + cfg.App.Port,
 		Handler: router,

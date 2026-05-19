@@ -19,3 +19,13 @@ func NewAuthHandler(authService *service.AuthService, sessionTTL time.Duration, 
 		sessionCookieSecure: sessionCookieSecure,
 	}
 }
+
+type CheckHandler struct {
+	checkService *service.CheckService
+}
+
+func NewCheckHandler(checkService *service.CheckService) *CheckHandler {
+	return &CheckHandler{
+		checkService: checkService,
+	}
+}
