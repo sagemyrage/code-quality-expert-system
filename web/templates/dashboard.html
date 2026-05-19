@@ -1,0 +1,13 @@
+{{define "content"}}
+<section>
+    <h2>Оценка качества кода</h2>
+    <form method="post" action="/checks">
+        <label for="code">Программа на Go</label>
+        <textarea id="code" name="code" required></textarea>
+        <button type="submit">Запуск</button>
+    </form>
+    <form method="post" action="/logout">
+        <button type="submit">Выйти</button>
+    </form>
+</section>
+{{end}}

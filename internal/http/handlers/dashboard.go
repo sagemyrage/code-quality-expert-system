@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"encoding/json"
+	"html/template"
 	"net/http"
 )
 
@@ -11,14 +11,18 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	response := map[string]string{
-		"status": "ok",
-		"page":   "dashboard",
+	tmpl, err := template.ParseFiles(
+		"web/templates/base.html",
+		"web/templates/dashboard.html",
+	)
+	if err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
 	}
 
-	if err := json.NewEncoder(w).Encode(response); err != nil {
+	err = tmpl.ExecuteTemplate(w, "base", nil)
+	if err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
 	}
 }
