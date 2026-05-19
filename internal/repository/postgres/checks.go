@@ -2,9 +2,12 @@ package postgres
 
 import (
 	"context"
+	"errors"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sagemyrage/code-quality-expert-system/internal/domain"
+	"github.com/sagemyrage/code-quality-expert-system/internal/repository"
 )
 
 type CheckRepository struct {
@@ -76,4 +79,30 @@ func (r *CheckRepository) ListByUserID(ctx context.Context, userID int64, limit 
 	}
 
 	return checks, nil
+}
+
+func (r *CheckRepository) FindByIDAndUserID(ctx context.Context, checkID int64, userID int64) (*domain.Check, error) {
+	query := `
+		SELECT id, user_id, source_code, created_at, updated_at
+		FROM checks
+		WHERE id = $1 AND user_id = $2
+	`
+
+	var check domain.Check
+	err := r.pool.QueryRow(ctx, query, checkID, userID).Scan(
+		&check.ID,
+		&check.UserID,
+		&check.SourceCode,
+		&check.CreatedAt,
+		&check.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, repository.ErrCheckNotFound
+		}
+
+		return nil, err
+	}
+
+	return &check, nil
 }

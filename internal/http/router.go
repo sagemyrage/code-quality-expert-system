@@ -33,6 +33,9 @@ func NewRouter(
 	createCheck := middleware.RequireAuth(http.HandlerFunc(ch.Create))
 	mux.Handle("POST /checks", createCheck)
 
+	showCheck := middleware.RequireAuth(http.HandlerFunc(ch.Show))
+	mux.Handle("GET /checks/{id}", showCheck)
+
 	identifyUser := middleware.IdentifyUser(authService)
 	return identifyUser(mux)
 }

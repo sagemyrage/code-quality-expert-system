@@ -12,6 +12,7 @@ const checkHistoryLimit = 10
 type CheckRepository interface {
 	Create(context.Context, int64, string) (*domain.Check, error)
 	ListByUserID(context.Context, int64, int) ([]domain.Check, error)
+	FindByIDAndUserID(context.Context, int64, int64) (*domain.Check, error)
 }
 
 type CheckService struct {
@@ -35,4 +36,8 @@ func (s *CheckService) Create(ctx context.Context, userID int64, sourceCode stri
 
 func (s *CheckService) ListByUserID(ctx context.Context, userID int64) ([]domain.Check, error) {
 	return s.checkRepo.ListByUserID(ctx, userID, checkHistoryLimit)
+}
+
+func (s *CheckService) GetByID(ctx context.Context, checkID int64, userID int64) (*domain.Check, error) {
+	return s.checkRepo.FindByIDAndUserID(ctx, checkID, userID)
 }

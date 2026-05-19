@@ -14,7 +14,7 @@
     <h2>История проверок</h2>
     {{range .Checks}}
     <article>
-        <p>{{.ID}}</p>
+        <a href="/checks/{{.ID}}">Проверка #{{.ID}}</a>
         <p>{{.CreatedAt}}</p>
         <pre>{{.SourceCode}}</pre>
     </article>
