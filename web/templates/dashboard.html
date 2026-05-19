@@ -2,12 +2,24 @@
 <section>
     <h2>Оценка качества кода</h2>
     <form method="post" action="/checks">
-        <label for="code">Программа на Go</label>
-        <textarea id="code" name="code" required></textarea>
+        <label for="source_code">Программа на Go</label>
+        <textarea id="source_code" name="source_code" required></textarea>
         <button type="submit">Запуск</button>
     </form>
     <form method="post" action="/logout">
         <button type="submit">Выйти</button>
     </form>
+</section>
+<section>
+    <h2>История проверок</h2>
+    {{range .Checks}}
+    <article>
+        <p>{{.ID}}</p>
+        <p>{{.CreatedAt}}</p>
+        <pre>{{.SourceCode}}</pre>
+    </article>
+    {{else}}
+        <p>Список проверок пуст</p>
+    {{end}}
 </section>
 {{end}}

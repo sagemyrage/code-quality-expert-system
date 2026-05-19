@@ -38,3 +38,42 @@ func (r *CheckRepository) Create(ctx context.Context, userID int64, sourceCode s
 
 	return &check, nil
 }
+
+func (r *CheckRepository) ListByUserID(ctx context.Context, userID int64, limit int) ([]domain.Check, error) {
+	query := `
+		SELECT id, user_id, source_code, created_at, updated_at
+		FROM checks
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2
+	`
+
+	rows, err := r.pool.Query(ctx, query, userID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var checks []domain.Check
+	for rows.Next() {
+		check := domain.Check{}
+		if err := rows.Scan(
+			&check.ID,
+			&check.UserID,
+			&check.SourceCode,
+			&check.CreatedAt,
+			&check.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+
+		checks = append(checks, check)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return checks, nil
+}

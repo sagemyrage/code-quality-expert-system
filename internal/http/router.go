@@ -27,7 +27,7 @@ func NewRouter(
 	mux.HandleFunc("GET /register", ah.RegisterPage)
 	mux.HandleFunc("POST /register", ah.Register)
 
-	requireAuth := middleware.RequireAuth(http.HandlerFunc(handlers.Dashboard))
+	requireAuth := middleware.RequireAuth(http.HandlerFunc(ch.Dashboard))
 	mux.Handle("GET /dashboard", requireAuth)
 
 	createCheck := middleware.RequireAuth(http.HandlerFunc(ch.Create))

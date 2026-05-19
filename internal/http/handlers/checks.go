@@ -20,7 +20,7 @@ func (h *CheckHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sourceCode := r.FormValue("code")
+	sourceCode := r.FormValue("source_code")
 	_, err := h.checkService.Create(r.Context(), userID, sourceCode)
 	if err != nil {
 		var validationError *service.ValidationError
