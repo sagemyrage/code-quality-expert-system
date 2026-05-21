@@ -21,7 +21,7 @@ func main() {
 		}
 	}
 }
-`,
+			`,
 			wantDepth: 2,
 		},
 		{
@@ -35,7 +35,7 @@ func main() {
     } else if true {
     }
 }
-`,
+			`,
 			wantDepth: 1,
 		},
 		{
@@ -50,7 +50,7 @@ func main() {
     	}
 	}
 }
-`,
+			`,
 			wantDepth: 2,
 		},
 		{
@@ -64,7 +64,7 @@ func main() {
 		}
     } 
 }
-`,
+			`,
 			wantDepth: 2,
 		},
 		{
@@ -79,7 +79,7 @@ func main() {
 		}
 	}
 }
-`,
+			`,
 			wantDepth: 2,
 		},
 		{
@@ -97,7 +97,7 @@ func main() {
 	default:
 	}
 }
-`,
+			`,
 			wantDepth: 2,
 		},
 	}
@@ -113,5 +113,86 @@ func main() {
 				t.Errorf("MaxNestingDepth = %d, want = %d", metrics.MaxNestingDepth, tt.wantDepth)
 			}
 		})
+	}
+}
+
+func TestAnalyzeBasicMetrics(t *testing.T) {
+	test := struct {
+		name                    string
+		sourceCode              string
+		wantFunctionCount       int64
+		wantConditionalCount    int64
+		wantLoopCount           int64
+		wantGlobalVariableCount int64
+		wantLongLineCount       int64
+		wantCommentLineCount    int64
+	}{
+		name: "basic metrics",
+		sourceCode: `
+package main
+
+import "fmt"
+
+// Глобальные переменные
+var global1 = 10
+var global2 = "hello"
+
+// Функция main
+func main() {
+	var input int
+	fmt.Scan(&input)
+
+	switch input {
+	case 1:
+		for i := 0; i < 100; i++ {
+		}
+	case 2:
+		s := []int{1,2,3,4,5}
+		for k, v := range s {
+		}
+	default:
+		if input > global1 {
+			panic("паника")
+		}
+	}
+}
+
+// Функция anotherMain и длинная строка
+func anotherMainAndVeryyyyyyyyyyyyyLoooooooooooooooooooooooooongStriiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiinggggggggggggggggggggggg() {
+	if true {
+			fmt.Println(global2)
+	}
+}
+		`,
+		wantFunctionCount:       2,
+		wantConditionalCount:    3,
+		wantLoopCount:           2,
+		wantGlobalVariableCount: 2,
+		wantLongLineCount:       1,
+		wantCommentLineCount:    3,
+	}
+
+	metrics, err := Analyze(test.sourceCode)
+	if err != nil {
+		t.Fatalf("Analyze() error: %v", err)
+	}
+
+	if metrics.FunctionCount != test.wantFunctionCount {
+		t.Errorf("FunctionCount = %d, want = %d", metrics.FunctionCount, test.wantFunctionCount)
+	}
+	if metrics.ConditionalCount != test.wantConditionalCount {
+		t.Errorf("ConditionalCount = %d, want = %d", metrics.ConditionalCount, test.wantConditionalCount)
+	}
+	if metrics.LoopCount != test.wantLoopCount {
+		t.Errorf("LoopCount = %d, want = %d", metrics.LoopCount, test.wantLoopCount)
+	}
+	if metrics.GlobalVariableCount != test.wantGlobalVariableCount {
+		t.Errorf("GlobalVariableCount = %d, want = %d", metrics.GlobalVariableCount, test.wantGlobalVariableCount)
+	}
+	if metrics.LongLineCount != test.wantLongLineCount {
+		t.Errorf("LongLineCount = %d, want = %d", metrics.LongLineCount, test.wantLongLineCount)
+	}
+	if metrics.CommentLineCount != test.wantCommentLineCount {
+		t.Errorf("CommentLineCount = %d, want = %d", metrics.CommentLineCount, test.wantCommentLineCount)
 	}
 }

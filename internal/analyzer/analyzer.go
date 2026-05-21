@@ -90,7 +90,7 @@ func Analyze(sourceCode string) (Metrics, error) {
 
 	ast.Inspect(file, func(node ast.Node) bool {
 		switch node.(type) {
-		case *ast.IfStmt, *ast.SwitchStmt, *ast.TypeSwitchStmt, *ast.SelectStmt:
+		case *ast.IfStmt, *ast.SwitchStmt, *ast.TypeSwitchStmt:
 			metrics.ConditionalCount++
 		case *ast.ForStmt, *ast.RangeStmt:
 			metrics.LoopCount++
