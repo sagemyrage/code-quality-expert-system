@@ -42,6 +42,107 @@ func (r *CheckRepository) Create(ctx context.Context, userID int64, sourceCode s
 	return &check, nil
 }
 
+func (r *CheckRepository) CreateWithMetrics(ctx context.Context, userID int64, sourceCode string, metrics domain.CheckMetrics) (*domain.Check, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	createCheck := `
+		INSERT INTO checks (user_id, source_code)
+		VALUES ($1, $2)
+		RETURNING id, user_id, source_code, created_at, updated_at
+	`
+
+	var check domain.Check
+	err = tx.QueryRow(ctx, createCheck, userID, sourceCode).Scan(
+		&check.ID,
+		&check.UserID,
+		&check.SourceCode,
+		&check.CreatedAt,
+		&check.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	metrics.CheckID = check.ID
+
+	createCheckMetrics := `
+	INSERT INTO check_metrics (
+		check_id,
+		line_count,
+		comment_line_count,
+		comment_ratio,
+		function_count,
+		average_function_length,
+		max_function_length,
+		conditional_count,
+		loop_count,
+		max_nesting_depth,
+		global_variable_count,
+		long_line_count
+	)
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+	RETURNING 
+		check_id,
+		line_count,
+		comment_line_count,
+		comment_ratio,
+		function_count,
+		average_function_length,
+		max_function_length,
+		conditional_count,
+		loop_count,
+		max_nesting_depth,
+		global_variable_count,
+		long_line_count,
+		created_at
+	`
+
+	var createdMetrics domain.CheckMetrics
+	err = tx.QueryRow(
+		ctx,
+		createCheckMetrics,
+		metrics.CheckID,
+		metrics.LineCount,
+		metrics.CommentLineCount,
+		metrics.CommentRatio,
+		metrics.FunctionCount,
+		metrics.AverageFunctionLength,
+		metrics.MaxFunctionLength,
+		metrics.ConditionalCount,
+		metrics.LoopCount,
+		metrics.MaxNestingDepth,
+		metrics.GlobalVariableCount,
+		metrics.LongLineCount,
+	).Scan(
+		&createdMetrics.CheckID,
+		&createdMetrics.LineCount,
+		&createdMetrics.CommentLineCount,
+		&createdMetrics.CommentRatio,
+		&createdMetrics.FunctionCount,
+		&createdMetrics.AverageFunctionLength,
+		&createdMetrics.MaxFunctionLength,
+		&createdMetrics.ConditionalCount,
+		&createdMetrics.LoopCount,
+		&createdMetrics.MaxNestingDepth,
+		&createdMetrics.GlobalVariableCount,
+		&createdMetrics.LongLineCount,
+		&createdMetrics.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &check, nil
+}
+
 func (r *CheckRepository) ListByUserID(ctx context.Context, userID int64, limit int) ([]domain.Check, error) {
 	query := `
 		SELECT id, user_id, source_code, created_at, updated_at
