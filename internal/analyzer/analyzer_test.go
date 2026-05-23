@@ -127,7 +127,6 @@ func TestAnalyzeBasicMetrics(t *testing.T) {
 		wantLongLineCount       int64
 		wantCommentLineCount    int64
 	}{
-		name: "basic metrics",
 		sourceCode: `
 package main
 

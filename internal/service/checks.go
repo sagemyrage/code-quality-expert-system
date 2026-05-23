@@ -11,9 +11,10 @@ import (
 const checkHistoryLimit = 10
 
 type CheckRepository interface {
-	ListByUserID(context.Context, int64, int) ([]domain.Check, error)
-	FindByIDAndUserID(context.Context, int64, int64) (*domain.Check, error)
-	CreateWithMetrics(context.Context, int64, string, domain.CheckMetrics) (*domain.Check, error)
+	ListByUserID(ctx context.Context, userID int64, limit int) ([]domain.Check, error)
+	FindByIDAndUserID(ctx context.Context, checkID int64, userID int64) (*domain.Check, error)
+	CreateWithMetrics(ctx context.Context, userID int64, sourceCode string, metrics domain.CheckMetrics) (*domain.Check, error)
+	FindMetricsByCheckID(ctx context.Context, checkID int64) (*domain.CheckMetrics, error)
 }
 
 type CheckService struct {
@@ -64,4 +65,18 @@ func (s *CheckService) ListByUserID(ctx context.Context, userID int64) ([]domain
 
 func (s *CheckService) GetByID(ctx context.Context, checkID int64, userID int64) (*domain.Check, error) {
 	return s.checkRepo.FindByIDAndUserID(ctx, checkID, userID)
+}
+
+func (s *CheckService) GetDetailsByID(ctx context.Context, checkID int64, userID int64) (*domain.CheckDetails, error) {
+	check, err := s.checkRepo.FindByIDAndUserID(ctx, checkID, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	metrics, err := s.checkRepo.FindMetricsByCheckID(ctx, checkID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.CheckDetails{Check: *check, Metrics: *metrics}, nil
 }

@@ -14,7 +14,8 @@ import (
 )
 
 type CheckPageData struct {
-	Check domain.Check
+	Check   domain.Check
+	Metrics domain.CheckMetrics
 }
 
 func (h *CheckHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -64,9 +65,13 @@ func (h *CheckHandler) Show(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	check, err := h.checkService.GetByID(r.Context(), checkID, userID)
+	details, err := h.checkService.GetDetailsByID(r.Context(), checkID, userID)
 	if err != nil {
 		if errors.Is(err, repository.ErrCheckNotFound) {
+			http.NotFound(w, r)
+			return
+		}
+		if errors.Is(err, repository.ErrCheckMetricsNotFound) {
 			http.NotFound(w, r)
 			return
 		}
@@ -84,7 +89,7 @@ func (h *CheckHandler) Show(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := CheckPageData{Check: *check}
+	data := CheckPageData{Check: details.Check, Metrics: details.Metrics}
 	err = tmpl.ExecuteTemplate(w, "base", data)
 	if err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)

@@ -1,8 +1,53 @@
 {{define "content"}}
 <section>
-    <p>{{.Check.ID}}</p>
+    <h2>Проверка #{{.Check.ID}}</h2>
     <p>{{.Check.CreatedAt}}</p>
     <pre>{{.Check.SourceCode}}</pre>
+    <h2>Метрики</h2>
+    <dl>
+        <dt>Количество строк:</dt>
+        <dd>{{.Metrics.LineCount}}</dd>
+    </dl>
+    <dl>
+        <dt>Комментарии:</dt>
+        <dd>{{.Metrics.CommentLineCount}}</dd>
+    </dl>
+    <dl>
+        <dt>Доля комментариев:</dt>
+        <dd>{{.Metrics.CommentRatio}}</dd>
+    </dl>
+    <dl>
+        <dt>Функции:</dt>
+        <dd>{{.Metrics.FunctionCount}}</dd>
+    </dl>
+    <dl>
+        <dt>Средняя длина функции:</dt>
+        <dd>{{.Metrics.AverageFunctionLength}}</dd>
+    </dl>
+    <dl>
+        <dt>Максимальная длина функции:</dt>
+        <dd>{{.Metrics.MaxFunctionLength}}</dd>
+    </dl>
+    <dl>
+        <dt>Условные операторы:</dt>
+        <dd>{{.Metrics.ConditionalCount}}</dd>
+    </dl>
+    <dl>
+        <dt>Циклы:</dt>
+        <dd>{{.Metrics.LoopCount}}</dd>
+    </dl>
+    <dl>
+        <dt>Максимальная вложенность:</dt>
+        <dd>{{.Metrics.MaxNestingDepth}}</dd>
+    </dl>
+    <dl>
+        <dt>Глобальные переменные:</dt>
+        <dd>{{.Metrics.GlobalVariableCount}}</dd>
+    </dl>
+    <dl>
+        <dt>Длинные строки:</dt>
+        <dd>{{.Metrics.LongLineCount}}</dd>
+    </dl>
     <a href="/dashboard">На главную</a>
 </section>
 {{end}}
