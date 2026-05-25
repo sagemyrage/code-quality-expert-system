@@ -15,8 +15,8 @@
     {{range .Checks}}
     <article>
         <a href="/checks/{{.ID}}">Проверка #{{.ID}}</a>
+        <p>Оценка – {{.Score}} ({{.Level}})</p>
         <p>{{.CreatedAt}}</p>
-        <pre>{{.SourceCode}}</pre>
     </article>
     {{else}}
         <p>Список проверок пуст</p>

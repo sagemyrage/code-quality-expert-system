@@ -6,15 +6,15 @@ import (
 
 	"github.com/sagemyrage/code-quality-expert-system/internal/analyzer"
 	"github.com/sagemyrage/code-quality-expert-system/internal/domain"
+	"github.com/sagemyrage/code-quality-expert-system/internal/fuzzy"
 )
 
-const checkHistoryLimit = 10
-
 type CheckRepository interface {
-	ListByUserID(ctx context.Context, userID int64, limit int) ([]domain.Check, error)
+	ListByUserID(ctx context.Context, userID int64) ([]domain.Check, error)
 	FindByIDAndUserID(ctx context.Context, checkID int64, userID int64) (*domain.Check, error)
-	CreateWithMetrics(ctx context.Context, userID int64, sourceCode string, metrics domain.CheckMetrics) (*domain.Check, error)
+	Create(ctx context.Context, userID int64, sourceCode string, score float64, level string, recommendations []string, metrics domain.CheckMetrics) (*domain.Check, error)
 	FindMetricsByCheckID(ctx context.Context, checkID int64) (*domain.CheckMetrics, error)
+	FindRecommendationsByCheckID(ctx context.Context, checkID int64) ([]domain.CheckRecommendation, error)
 }
 
 type CheckService struct {
@@ -51,7 +51,26 @@ func (s *CheckService) Create(ctx context.Context, userID int64, sourceCode stri
 		GlobalVariableCount:   analysisMetrics.GlobalVariableCount,
 		LongLineCount:         analysisMetrics.LongLineCount,
 	}
-	check, err := s.checkRepo.CreateWithMetrics(ctx, userID, sourceCode, checkMetrics)
+
+	fuzzyInput := fuzzy.Input{
+		LineCount:             analysisMetrics.LineCount,
+		CommentLineCount:      analysisMetrics.CommentLineCount,
+		CommentRatio:          analysisMetrics.CommentRatio,
+		FunctionCount:         analysisMetrics.FunctionCount,
+		AverageFunctionLength: analysisMetrics.AverageFunctionLength,
+		MaxFunctionLength:     analysisMetrics.MaxFunctionLength,
+		ConditionalCount:      analysisMetrics.ConditionalCount,
+		LoopCount:             analysisMetrics.LoopCount,
+		MaxNestingDepth:       analysisMetrics.MaxNestingDepth,
+		GlobalVariableCount:   analysisMetrics.GlobalVariableCount,
+		LongLineCount:         analysisMetrics.LongLineCount,
+	}
+	evaluation, err := fuzzy.Evaluate(fuzzyInput)
+	if err != nil {
+		return nil, err
+	}
+
+	check, err := s.checkRepo.Create(ctx, userID, sourceCode, evaluation.Score, evaluation.Level, evaluation.Recommendations, checkMetrics)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +79,7 @@ func (s *CheckService) Create(ctx context.Context, userID int64, sourceCode stri
 }
 
 func (s *CheckService) ListByUserID(ctx context.Context, userID int64) ([]domain.Check, error) {
-	return s.checkRepo.ListByUserID(ctx, userID, checkHistoryLimit)
+	return s.checkRepo.ListByUserID(ctx, userID)
 }
 
 func (s *CheckService) GetByID(ctx context.Context, checkID int64, userID int64) (*domain.Check, error) {
@@ -78,5 +97,10 @@ func (s *CheckService) GetDetailsByID(ctx context.Context, checkID int64, userID
 		return nil, err
 	}
 
-	return &domain.CheckDetails{Check: *check, Metrics: *metrics}, nil
+	recommendations, err := s.checkRepo.FindRecommendationsByCheckID(ctx, checkID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.CheckDetails{Check: *check, Metrics: *metrics, Recommendations: recommendations}, nil
 }

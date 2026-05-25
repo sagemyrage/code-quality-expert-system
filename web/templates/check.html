@@ -1,8 +1,11 @@
 {{define "content"}}
 <section>
     <h2>Проверка #{{.Check.ID}}</h2>
+    <p>Оценка – {{.Check.Score}} ({{.Check.Level}})</p>
     <p>{{.Check.CreatedAt}}</p>
     <pre>{{.Check.SourceCode}}</pre>
+</section>
+<section>
     <h2>Метрики</h2>
     <dl>
         <dt>Количество строк:</dt>
@@ -49,5 +52,15 @@
         <dd>{{.Metrics.LongLineCount}}</dd>
     </dl>
     <a href="/dashboard">На главную</a>
+</section>
+<section>
+    <h2>Рекомендации</h2>
+    {{range .Recommendations}}
+    <article>
+        <p>{{.Text}}</p>
+    </article>
+    {{else}}
+        <p>Список рекомендаций пуст</p>
+    {{end}}
 </section>
 {{end}}

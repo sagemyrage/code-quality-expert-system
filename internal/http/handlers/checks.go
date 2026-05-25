@@ -14,8 +14,9 @@ import (
 )
 
 type CheckPageData struct {
-	Check   domain.Check
-	Metrics domain.CheckMetrics
+	Check           domain.Check
+	Metrics         domain.CheckMetrics
+	Recommendations []domain.CheckRecommendation
 }
 
 func (h *CheckHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +90,7 @@ func (h *CheckHandler) Show(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := CheckPageData{Check: details.Check, Metrics: details.Metrics}
+	data := CheckPageData{Check: details.Check, Metrics: details.Metrics, Recommendations: details.Recommendations}
 	err = tmpl.ExecuteTemplate(w, "base", data)
 	if err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)

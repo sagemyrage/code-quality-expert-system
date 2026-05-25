@@ -20,29 +20,15 @@ func NewCheckRepository(pool *pgxpool.Pool) *CheckRepository {
 	}
 }
 
-func (r *CheckRepository) Create(ctx context.Context, userID int64, sourceCode string) (*domain.Check, error) {
-	query := `
-		INSERT INTO checks (user_id, source_code)
-		VALUES ($1, $2)
-		RETURNING id, user_id, source_code, created_at, updated_at
-	`
-
-	var check domain.Check
-	err := r.pool.QueryRow(ctx, query, userID, sourceCode).Scan(
-		&check.ID,
-		&check.UserID,
-		&check.SourceCode,
-		&check.CreatedAt,
-		&check.UpdatedAt,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return &check, nil
-}
-
-func (r *CheckRepository) CreateWithMetrics(ctx context.Context, userID int64, sourceCode string, metrics domain.CheckMetrics) (*domain.Check, error) {
+func (r *CheckRepository) Create(
+	ctx context.Context,
+	userID int64,
+	sourceCode string,
+	score float64,
+	level string,
+	recommendations []string,
+	metrics domain.CheckMetrics,
+) (*domain.Check, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return nil, err
@@ -50,16 +36,18 @@ func (r *CheckRepository) CreateWithMetrics(ctx context.Context, userID int64, s
 	defer tx.Rollback(ctx)
 
 	createCheck := `
-		INSERT INTO checks (user_id, source_code)
-		VALUES ($1, $2)
-		RETURNING id, user_id, source_code, created_at, updated_at
+		INSERT INTO checks (user_id, source_code, score, level)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, user_id, source_code, score, level, created_at, updated_at
 	`
 
 	var check domain.Check
-	err = tx.QueryRow(ctx, createCheck, userID, sourceCode).Scan(
+	err = tx.QueryRow(ctx, createCheck, userID, sourceCode, score, level).Scan(
 		&check.ID,
 		&check.UserID,
 		&check.SourceCode,
+		&check.Score,
+		&check.Level,
 		&check.CreatedAt,
 		&check.UpdatedAt,
 	)
@@ -135,6 +123,17 @@ func (r *CheckRepository) CreateWithMetrics(ctx context.Context, userID int64, s
 		return nil, err
 	}
 
+	createCheckRecommendation := `
+	INSERT INTO check_recommendations (check_id, text, position)
+	VALUES ($1, $2, $3)
+	`
+	for p, text := range recommendations {
+		_, err = tx.Exec(ctx, createCheckRecommendation, check.ID, text, p+1)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	err = tx.Commit(ctx)
 	if err != nil {
 		return nil, err
@@ -143,16 +142,15 @@ func (r *CheckRepository) CreateWithMetrics(ctx context.Context, userID int64, s
 	return &check, nil
 }
 
-func (r *CheckRepository) ListByUserID(ctx context.Context, userID int64, limit int) ([]domain.Check, error) {
+func (r *CheckRepository) ListByUserID(ctx context.Context, userID int64) ([]domain.Check, error) {
 	query := `
-		SELECT id, user_id, source_code, created_at, updated_at
+		SELECT id, user_id, source_code, score, level, created_at, updated_at
 		FROM checks
 		WHERE user_id = $1
 		ORDER BY created_at DESC
-		LIMIT $2
 	`
 
-	rows, err := r.pool.Query(ctx, query, userID, limit)
+	rows, err := r.pool.Query(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -165,6 +163,8 @@ func (r *CheckRepository) ListByUserID(ctx context.Context, userID int64, limit 
 			&check.ID,
 			&check.UserID,
 			&check.SourceCode,
+			&check.Score,
+			&check.Level,
 			&check.CreatedAt,
 			&check.UpdatedAt,
 		); err != nil {
@@ -184,7 +184,7 @@ func (r *CheckRepository) ListByUserID(ctx context.Context, userID int64, limit 
 
 func (r *CheckRepository) FindByIDAndUserID(ctx context.Context, checkID int64, userID int64) (*domain.Check, error) {
 	query := `
-		SELECT id, user_id, source_code, created_at, updated_at
+		SELECT id, user_id, source_code, score, level, created_at, updated_at
 		FROM checks
 		WHERE id = $1 AND user_id = $2
 	`
@@ -194,6 +194,8 @@ func (r *CheckRepository) FindByIDAndUserID(ctx context.Context, checkID int64, 
 		&check.ID,
 		&check.UserID,
 		&check.SourceCode,
+		&check.Score,
+		&check.Level,
 		&check.CreatedAt,
 		&check.UpdatedAt,
 	)
