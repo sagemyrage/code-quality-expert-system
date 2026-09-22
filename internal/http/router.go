@@ -21,6 +21,7 @@ func NewRouter(
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", handlers.Home)
 	mux.HandleFunc("GET /health", handlers.Health)
+	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 	mux.HandleFunc("GET /login", ah.LoginPage)
 	mux.HandleFunc("POST /login", ah.Login)
 	mux.HandleFunc("POST /logout", ah.Logout)

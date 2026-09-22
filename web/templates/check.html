@@ -1,66 +1,86 @@
 {{define "content"}}
-<section>
-    <h2>Проверка #{{.Check.ID}}</h2>
-    <p>Оценка – {{.Check.Score}} ({{.Check.Level}})</p>
-    <p>{{.Check.CreatedAt}}</p>
-    <pre>{{.Check.SourceCode}}</pre>
-</section>
-<section>
-    <h2>Метрики</h2>
-    <dl>
-        <dt>Количество строк:</dt>
-        <dd>{{.Metrics.LineCount}}</dd>
-    </dl>
-    <dl>
-        <dt>Комментарии:</dt>
-        <dd>{{.Metrics.CommentLineCount}}</dd>
-    </dl>
-    <dl>
-        <dt>Доля комментариев:</dt>
-        <dd>{{.Metrics.CommentRatio}}</dd>
-    </dl>
-    <dl>
-        <dt>Функции:</dt>
-        <dd>{{.Metrics.FunctionCount}}</dd>
-    </dl>
-    <dl>
-        <dt>Средняя длина функции:</dt>
-        <dd>{{.Metrics.AverageFunctionLength}}</dd>
-    </dl>
-    <dl>
-        <dt>Максимальная длина функции:</dt>
-        <dd>{{.Metrics.MaxFunctionLength}}</dd>
-    </dl>
-    <dl>
-        <dt>Условные операторы:</dt>
-        <dd>{{.Metrics.ConditionalCount}}</dd>
-    </dl>
-    <dl>
-        <dt>Циклы:</dt>
-        <dd>{{.Metrics.LoopCount}}</dd>
-    </dl>
-    <dl>
-        <dt>Максимальная вложенность:</dt>
-        <dd>{{.Metrics.MaxNestingDepth}}</dd>
-    </dl>
-    <dl>
-        <dt>Глобальные переменные:</dt>
-        <dd>{{.Metrics.GlobalVariableCount}}</dd>
-    </dl>
-    <dl>
-        <dt>Длинные строки:</dt>
-        <dd>{{.Metrics.LongLineCount}}</dd>
-    </dl>
-    <a href="/dashboard">На главную</a>
-</section>
-<section>
-    <h2>Рекомендации</h2>
-    {{range .Recommendations}}
-    <article>
-        <p>{{.Text}}</p>
-    </article>
-    {{else}}
-        <p>Список рекомендаций пуст</p>
-    {{end}}
-</section>
+<a href="/dashboard" class="back-link">← Назад к панели управления</a>
+
+<div class="score-hero">
+    <div class="score-hero-left">
+        <p class="score-hero-label">Оценка качества</p>
+        <p class="score-hero-value">
+            {{printf "%.2f" .Check.Score}}<span class="score-hero-unit">/ 100</span>
+        </p>
+    </div>
+    <div class="score-hero-right">
+        <span class="level-badge" data-level="{{.Check.Level}}">{{.Check.Level}}</span>
+        <span class="score-hero-date">Проверка #{{.Check.ID}}</span>
+        <span class="score-hero-date">{{.Check.CreatedAt}}</span>
+    </div>
+</div>
+
+{{if .Recommendations}}
+<div class="card section-card">
+    <p class="section-title">Рекомендации</p>
+    <div class="recommendations-list">
+        {{range .Recommendations}}
+        <div class="rec-item">
+            <span class="rec-num">{{.Position}}</span>
+            <span class="rec-text">{{.Text}}</span>
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}
+
+<div class="card section-card">
+    <p class="section-title">Метрики</p>
+    <div class="metrics-grid">
+        <div class="metric-row">
+            <span class="metric-label">Строк кода</span>
+            <span class="metric-value">{{.Metrics.LineCount}}</span>
+        </div>
+        <div class="metric-row">
+            <span class="metric-label">Строк комментариев</span>
+            <span class="metric-value">{{.Metrics.CommentLineCount}}</span>
+        </div>
+        <div class="metric-row">
+            <span class="metric-label">Доля комментариев</span>
+            <span class="metric-value">{{printf "%.2f" .Metrics.CommentRatio}}</span>
+        </div>
+        <div class="metric-row">
+            <span class="metric-label">Функций</span>
+            <span class="metric-value">{{.Metrics.FunctionCount}}</span>
+        </div>
+        <div class="metric-row">
+            <span class="metric-label">Средняя длина функции</span>
+            <span class="metric-value">{{printf "%.1f" .Metrics.AverageFunctionLength}} стр.</span>
+        </div>
+        <div class="metric-row">
+            <span class="metric-label">Макс. длина функции</span>
+            <span class="metric-value">{{.Metrics.MaxFunctionLength}} стр.</span>
+        </div>
+        <div class="metric-row">
+            <span class="metric-label">Условных операторов</span>
+            <span class="metric-value">{{.Metrics.ConditionalCount}}</span>
+        </div>
+        <div class="metric-row">
+            <span class="metric-label">Циклов</span>
+            <span class="metric-value">{{.Metrics.LoopCount}}</span>
+        </div>
+        <div class="metric-row">
+            <span class="metric-label">Макс. вложенность</span>
+            <span class="metric-value">{{.Metrics.MaxNestingDepth}}</span>
+        </div>
+        <div class="metric-row">
+            <span class="metric-label">Глобальных переменных</span>
+            <span class="metric-value">{{.Metrics.GlobalVariableCount}}</span>
+        </div>
+        <div class="metric-row">
+            <span class="metric-label">Длинных строк (&gt;120)</span>
+            <span class="metric-value">{{.Metrics.LongLineCount}}</span>
+        </div>
+    </div>
+</div>
+
+<div class="card section-card">
+    <p class="section-title">Исходный код</p>
+    <pre class="source-pre">{{.Check.SourceCode}}</pre>
+</div>
 {{end}}

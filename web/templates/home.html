@@ -1,15 +1,16 @@
 {{define "content"}}
-<section>
-    <h2>Анализ качества кода на Go</h2>
-    <p>
-        Введите код на Go, запустите анализ качества и получите оценку с объяснением.
+<div class="hero">
+    <h2 class="hero-title">
+        Анализ качества кода<br>
+        <span class="accent">на языке Go</span>
+    </h2>
+    <p class="hero-desc">
+        Введите код, запустите анализ и получите оценку от 0 до 100
+        с подробными рекомендациями по улучшению.
     </p>
-    <p>
-        Проект использует метрики кода и нечёткую логику, чтобы рассчитать итоговую оценку качества.
-    </p>
-    <nav>
-        <a href="/login">Войти</a>
-        <a href="/register">Регистрация</a>
+    <nav class="hero-nav">
+        <a href="/login" class="btn btn-primary">Войти</a>
+        <a href="/register" class="btn btn-outline">Регистрация</a>
     </nav>
-</section>
+</div>
 {{end}}

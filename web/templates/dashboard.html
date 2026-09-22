@@ -1,25 +1,37 @@
 {{define "content"}}
-<section>
-    <h2>Оценка качества кода</h2>
-    <form method="post" action="/checks">
-        <label for="source_code">Программа на Go</label>
-        <textarea id="source_code" name="source_code" required></textarea>
-        <button type="submit">Запуск</button>
-    </form>
+<div class="dashboard-toolbar">
+    <h2>Панель управления</h2>
     <form method="post" action="/logout">
-        <button type="submit">Выйти</button>
+        <button type="submit" class="btn btn-ghost">Выйти</button>
     </form>
-</section>
-<section>
-    <h2>История проверок</h2>
+</div>
+
+<div class="card analyze-card">
+    <h2>Анализ кода</h2>
+    <form method="post" action="/checks">
+        <div class="form-group">
+            <label for="source_code">Код на Go</label>
+            <textarea id="source_code" name="source_code" required placeholder="Вставьте код на Go..."></textarea>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Запустить анализ</button>
+        </div>
+    </form>
+</div>
+
+<p class="history-title">История проверок</p>
+<div class="history-list">
     {{range .Checks}}
-    <article>
-        <a href="/checks/{{.ID}}">Проверка #{{.ID}}</a>
-        <p>Оценка – {{.Score}} ({{.Level}})</p>
-        <p>{{.CreatedAt}}</p>
+    <article class="history-item">
+        <div class="history-item-header">
+            <a href="/checks/{{.ID}}" class="history-item-link">Проверка #{{.ID}}</a>
+            <span class="level-badge" data-level="{{.Level}}">{{printf "%.2f" .Score}} — {{.Level}}</span>
+        </div>
+        <p class="history-item-date">{{.CreatedAt}}</p>
+        <pre class="history-item-code">{{.SourceCode}}</pre>
     </article>
     {{else}}
-        <p>Список проверок пуст</p>
+    <div class="empty-state">Проверок пока нет. Запустите первый анализ.</div>
     {{end}}
-</section>
+</div>
 {{end}}

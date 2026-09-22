@@ -3,16 +3,24 @@
 <html lang="ru">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1"> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Экспертная система качества кода</title>
+        <link rel="stylesheet" href="/static/style.css">
     </head>
     <body>
-        <header>
-            <h1>Экспертная система качества кода</h1>
+        <header class="site-header">
+            <div class="container">
+                <a href="/" class="site-logo">
+                    <span class="logo-accent">⬡</span>
+                    GoQuality
+                </a>
+            </div>
         </header>
 
-        <main>
-            {{template "content" .}}
+        <main class="site-main">
+            <div class="container">
+                {{template "content" .}}
+            </div>
         </main>
     </body>
 </html>
