@@ -2,6 +2,7 @@ import os
 
 import psycopg
 import pytest
+import uuid
 
 
 @pytest.fixture(scope="session")
@@ -24,3 +25,30 @@ def db_connection(postgres_dsn: str):
         yield connection
     finally:
         connection.close()
+
+@pytest.fixture()
+def existing_user(db_connection: psycopg.Connection):
+    test_email = f"qa_{uuid.uuid4()}@example.test"
+    test_password_hash = "test123456"
+
+    try:
+        with db_connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO users (email, password_hash)
+                VALUES (%s, %s)
+                """,
+                (test_email, test_password_hash),
+            )
+            assert cursor.rowcount == 1, "expected to insert exactly one test user"
+            yield test_email, test_password_hash
+
+    finally:
+        with db_connection.cursor() as cursor:
+            cursor.execute(
+                """
+                DELETE FROM users
+                WHERE email = %s
+                """,
+                (test_email,),
+            )
