@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"regexp"
 	"strings"
 
 	"github.com/sagemyrage/code-quality-expert-system/internal/domain"
@@ -39,6 +40,11 @@ type LoginResult struct {
 	SessionID string
 }
 
+var emailRegex = regexp.MustCompile(
+	`^[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?)*@` +
+		`[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$`,
+)
+
 func (s *AuthService) Register(
 	ctx context.Context,
 	email string,
@@ -49,6 +55,10 @@ func (s *AuthService) Register(
 	email = strings.ToLower(email)
 	if email == "" {
 		return nil, &ValidationError{Message: "email is required"}
+	}
+
+	if !isValidEmail(email) {
+		return nil, &ValidationError{Message: "invalid email"}
 	}
 
 	if password == "" {
@@ -83,6 +93,10 @@ func (s *AuthService) Login(ctx context.Context, email string, password string) 
 	email = strings.ToLower(email)
 	if email == "" {
 		return nil, &ValidationError{Message: "email is required"}
+	}
+
+	if !isValidEmail(email) {
+		return nil, &ValidationError{Message: "invalid email"}
 	}
 
 	if password == "" {
@@ -136,4 +150,30 @@ func (s *AuthService) AuthenticateSession(ctx context.Context, sessionID string)
 	}
 
 	return userID, nil
+}
+
+func isValidEmail(email string) bool {
+	if len(email) > 254 {
+		return false
+	}
+
+	parts := strings.Split(email, "@")
+	if len(parts) != 2 {
+		return false
+	}
+
+	localPart := parts[0]
+	domain := parts[1]
+
+	if len(localPart) > 64 || len(localPart) == 0 {
+		return false
+	}
+
+	for _, label := range strings.Split(domain, ".") {
+		if len(label) == 0 || len(label) > 63 {
+			return false
+		}
+	}
+
+	return emailRegex.MatchString(email)
 }
