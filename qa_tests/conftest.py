@@ -1,13 +1,21 @@
 import os
+import uuid
 
 import psycopg
 import pytest
-import uuid
+
+from clients.client import Client
+from db.database import Database
 
 
 @pytest.fixture(scope="session")
 def base_url() -> str:
     return os.getenv("CQES_BASE_URL", "http://localhost:8080").rstrip("/")
+
+
+@pytest.fixture()
+def client(base_url: str) -> Client:
+    return Client(base_url)
 
 
 @pytest.fixture(scope="session")
@@ -25,6 +33,12 @@ def db_connection(postgres_dsn: str):
         yield connection
     finally:
         connection.close()
+
+
+@pytest.fixture()
+def db(db_connection: psycopg.Connection) -> Database:
+    return Database(db_connection)
+
 
 @pytest.fixture()
 def existing_user(db_connection: psycopg.Connection):
@@ -52,3 +66,11 @@ def existing_user(db_connection: psycopg.Connection):
                 """,
                 (test_email,),
             )
+
+
+@pytest.fixture()
+def test_email(db: Database):
+    email = f"qa_{uuid.uuid4()}@example.test"
+    yield email
+
+    db.delete_user_by_email(email)
