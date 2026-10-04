@@ -41,31 +41,15 @@ def db(db_connection: psycopg.Connection) -> Database:
 
 
 @pytest.fixture()
-def existing_user(db_connection: psycopg.Connection):
+def existing_user(db: Database):
     test_email = f"qa_{uuid.uuid4()}@example.test"
-    test_password_hash = "test123456"
+    test_password = "test123test"
+    test_password_hash = "$2y$10$eIiDigAPo7SCU761JgCarOjJmborGrfF/xwwYebMDiwlxP4FR5fUG"
 
-    try:
-        with db_connection.cursor() as cursor:
-            cursor.execute(
-                """
-                INSERT INTO users (email, password_hash)
-                VALUES (%s, %s)
-                """,
-                (test_email, test_password_hash),
-            )
-            assert cursor.rowcount == 1, "expected to insert exactly one test user"
-            yield test_email, test_password_hash
+    db.create_user(test_email, test_password_hash)
+    yield test_email, test_password
 
-    finally:
-        with db_connection.cursor() as cursor:
-            cursor.execute(
-                """
-                DELETE FROM users
-                WHERE email = %s
-                """,
-                (test_email,),
-            )
+    db.delete_user_by_email(test_email)
 
 
 @pytest.fixture()

@@ -5,19 +5,19 @@ class Database:
     def __init__(self, connection: psycopg.Connection):
         self.connection = connection
 
-    def count_users_by_email(self, email: str) -> int:
-        with self.connection.cursor(row_factory=dict_row) as cursor:
+    def create_user(
+        self,
+        email: str,
+        password_hash: str,
+    ) -> None:
+        with self.connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT count(*) as user_count
-                FROM users
-                WHERE email = %s
+                INSERT INTO users (email, password_hash)
+                VALUES (%s, %s)
                 """,
-                (email,),
+                (email, password_hash),
             )
-            row = cursor.fetchone()
-
-        return row["user_count"]
 
     def get_user_by_email(self, email: str) -> dict | None:
         with self.connection.cursor(row_factory=dict_row) as cursor:
@@ -33,7 +33,21 @@ class Database:
 
         return user
 
-    def delete_user_by_email(self, email: str):
+    def count_users_by_email(self, email: str) -> int:
+        with self.connection.cursor(row_factory=dict_row) as cursor:
+            cursor.execute(
+                """
+                SELECT count(*) as user_count
+                FROM users
+                WHERE email = %s
+                """,
+                (email,),
+            )
+            row = cursor.fetchone()
+
+        return row["user_count"]
+
+    def delete_user_by_email(self, email: str) -> None:
         with self.connection.cursor() as cursor:
             cursor.execute(
                 """

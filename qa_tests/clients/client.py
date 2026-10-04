@@ -22,3 +22,20 @@ class Client:
         )
 
         return response
+
+    def login(
+        self,
+        email: str,
+        password: str,
+    ) -> requests.Response:
+        response = requests.post(
+            f"{self.base_url}/login",
+            data={
+                "email": email,
+                "password": password,
+            },
+            timeout=5,
+            allow_redirects=False,
+        )
+
+        return response
