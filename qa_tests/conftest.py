@@ -6,6 +6,7 @@ import pytest
 
 from clients.client import Client
 from db.database import Database
+from models.user import UserCredentials
 
 
 @pytest.fixture(scope="session")
@@ -47,7 +48,10 @@ def existing_user(db: Database):
     test_password_hash = "$2y$10$eIiDigAPo7SCU761JgCarOjJmborGrfF/xwwYebMDiwlxP4FR5fUG"
 
     db.create_user(test_email, test_password_hash)
-    yield test_email, test_password
+    yield UserCredentials(
+        email=test_email,
+        password=test_password,
+    )
 
     db.delete_user_by_email(test_email)
 

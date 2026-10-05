@@ -5,6 +5,7 @@ import pytest
 
 from clients.client import Client
 from db.database import Database
+from models.user import UserCredentials
 
 
 def test_registration_with_valid_data(
@@ -82,12 +83,12 @@ def test_registration_normalizes_email(
         db.delete_user_by_email(base_email)
 
 
-def test_registration_with_duplicate_email(
-    existing_user: tuple[str, str],
+def test_registration_with_whitespace_only_email(
     client: Client,
     db: Database,
 ):
-    test_email, test_password = existing_user
+    test_email = "  "
+    test_password = "123test123"
 
     response = client.register(
         email=test_email,
@@ -96,9 +97,49 @@ def test_registration_with_duplicate_email(
     )
 
     assert response.status_code == 400
-    assert "email already exists" in response.text
+    assert "email is required" in response.text
 
     count = db.count_users_by_email(test_email)
+
+    assert count == 0, f"expected exactly zero users, actually found {count}"
+
+
+def test_registration_with_duplicate_email(
+    existing_user: UserCredentials,
+    client: Client,
+    db: Database,
+):
+    response = client.register(
+        email=existing_user.email,
+        password=existing_user.password,
+        password_confirmation=existing_user.password,
+    )
+
+    assert response.status_code == 400
+    assert "email already exists" in response.text
+
+    count = db.count_users_by_email(existing_user.email)
+
+    assert count == 1, f"expected exactly one user, actually found {count}"
+
+
+def test_registration_with_duplicate_email_after_normalization(
+    existing_user: UserCredentials,
+    client: Client,
+    db: Database,
+):
+    test_email = f" {existing_user.email.upper()} "
+
+    response = client.register(
+        email=test_email,
+        password=existing_user.password,
+        password_confirmation=existing_user.password,
+    )
+
+    assert response.status_code == 400
+    assert "email already exists" in response.text
+
+    count = db.count_users_by_email(existing_user.email)
 
     assert count == 1, f"expected exactly one user, actually found {count}"
 
@@ -266,6 +307,28 @@ def test_registration_with_mismatched_passwords(
         email=test_email,
         password=test_password,
         password_confirmation=test_wrong_password,
+    )
+
+    assert response.status_code == 400
+    assert "passwords do not match" in response.text
+
+    count = db.count_users_by_email(test_email)
+
+    assert count == 0, f"expected exactly zero users, actually found {count}"
+
+
+def test_registration_with_empty_password_confirmation(
+    client: Client,
+    db: Database,
+):
+    test_email = f"qa_{uuid.uuid4()}@example.test"
+    test_password = "123test123"
+    empty_password_confirmation = ""
+
+    response = client.register(
+        email=test_email,
+        password=test_password,
+        password_confirmation=empty_password_confirmation,
     )
 
     assert response.status_code == 400
