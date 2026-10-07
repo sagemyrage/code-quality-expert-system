@@ -6,6 +6,11 @@ import pytest
 from clients.client import Client
 from db.database import Database
 from models.user import UserCredentials
+from utils.email import (
+    email_with_spaces,
+    uppercase_email,
+    uppercase_email_with_spaces,
+)
 
 
 def test_registration_with_valid_data(
@@ -28,18 +33,6 @@ def test_registration_with_valid_data(
 
     assert user is not None
     assert user["email"] == test_email
-
-
-def uppercase_email(email: str) -> str:
-    return email.upper()
-
-
-def email_with_spaces(email: str) -> str:
-    return f" {email} "
-
-
-def uppercase_email_with_spaces(email: str) -> str:
-    return f" {email.upper()} "
 
 
 @pytest.mark.parametrize(
